@@ -26,6 +26,22 @@ python --version
 pip freeze
 
 #################################### VARIABLE TILE_SIZE (15k iters) - NO SR #############################################
+TILE_SIZE=512
+
+python sahi_inference.py --model_path /h/jquinto/Mask2Former/output_lifeplan_b_${TILE_SIZE}_sahi_tiled_v9_R50_1024_one_cycle_lr_5e-5_colour_augs_15k_iters/model_final.pth \
+--exp_name lifeplan_b_${TILE_SIZE}_sahi_tiled_keep_cutoff_v9_R50_one_cycle_5e-5_epoch_4_15k_iters \
+--dataset_json_path /h/jquinto/lifeplan_b_v9_cropped_center/annotations/instances_val2017.json \
+--dataset_img_path /h/jquinto/lifeplan_b_v9_cropped_center/val2017 \
+--config_path /h/jquinto/Mask2Former/configs/lifeplan/instance-segmentation/maskformer2_R50_bs16_50ep.yaml \
+--crop_fac 16 \
+--postprocess_match_threshold 0.5 \
+--model_confidence_threshold 0.25 \
+--predict \
+--scale_factor 1 \
+--slice_height ${TILE_SIZE} \
+--slice_width ${TILE_SIZE} \
+--overlap 0.6
+
 # # FOR RUNNING ON DOTA-AUGS MODEL (NO-SR, NO MULTISCALE) (SWIN)
 # # (while true; do nvidia-smi; top -b -n 1 | head -20; sleep 10; done) & 
 # python sahi_inference.py --model_path /h/jquinto/Mask2Former/output_lifeplan_b_${TILE_SIZE}_sahi_tiled_v9_R50_1024_one_cycle_lr_5e-5_colour_augs_15k_iters/model_0004884.pth \
@@ -73,22 +89,6 @@ pip freeze
 # --slice_height ${TILE_SIZE} \
 # --slice_width ${TILE_SIZE} \
 # --overlap 0.6
-
-# FOR RUNNING ON DOTA-AUGS MODEL (NO-SR, NO MULTISCALE) (SWIN)
-# (while true; do nvidia-smi; top -b -n 1 | head -20; sleep 10; done) & 
-python sahi_inference.py --model_path /h/jquinto/Mask2Former/output_lifeplan_b_${TILE_SIZE}_sahi_tiled_v9_R50_1024_one_cycle_lr_5e-5_colour_augs_15k_iters/model_final.pth \
---exp_name lifeplan_b_${TILE_SIZE}_sahi_tiled_keep_cutoff_v9_R50_one_cycle_5e-5_epoch_4_15k_iters \
---dataset_json_path /h/jquinto/lifeplan_b_v9_cropped_center/annotations/instances_val2017.json \
---dataset_img_path /h/jquinto/lifeplan_b_v9_cropped_center/val2017 \
---config_path /h/jquinto/Mask2Former/configs/lifeplan/instance-segmentation/maskformer2_R50_bs16_50ep.yaml \
---crop_fac 16 \
---postprocess_match_threshold 0.5 \
---model_confidence_threshold 0.25 \
---predict \
---scale_factor 1 \
---slice_height ${TILE_SIZE} \
---slice_width ${TILE_SIZE} \
---overlap 0.6
 
 # #################################### VARIABLE TILE_SIZE (15k iters) - SR #############################################
 # # BASE TILE SIZE (prior to SR)
