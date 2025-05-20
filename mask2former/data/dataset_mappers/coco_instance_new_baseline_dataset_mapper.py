@@ -10,7 +10,8 @@ from detectron2.config import configurable
 from detectron2.data import detection_utils as utils
 from detectron2.data import transforms as T
 from detectron2.data.transforms import TransformGen
-from detectron2.structures import BitMasks, Instances
+from detectron2.structures import BitMasks, Instances, PolygonMasks
+from PIL import Image
 
 from pycocotools import mask as coco_mask
 
@@ -47,22 +48,62 @@ def build_transform_gen(cfg, is_train):
     max_scale = cfg.INPUT.MAX_SCALE
 
     augmentation = []
+    
+    # # ORIGINAL SCHEME (COMMENT OUT)
+    # if cfg.INPUT.RANDOM_FLIP != "none":
+    #     augmentation.append(
+    #         T.RandomFlip(
+    #             horizontal=cfg.INPUT.RANDOM_FLIP == "horizontal",
+    #             vertical=cfg.INPUT.RANDOM_FLIP == "vertical",
+    #         )
+    #     )
+
+    # augmentation.extend([
+    #     T.ResizeScale(
+    #         min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
+    #     ),
+    #     T.FixedSizeCrop(crop_size=(image_size, image_size)),
+    # ])
+
+    # OUR SCHEME - mostly moved offline for reproducibility
+    # augmentation.extend([
+    #     T.RandomCrop(
+    #         crop_type='absolute', 
+    #         crop_size=(1024, 1024)
+    #     )]
+    # )
 
     if cfg.INPUT.RANDOM_FLIP != "none":
-        augmentation.append(
+        augmentation.extend([
             T.RandomFlip(
-                horizontal=cfg.INPUT.RANDOM_FLIP == "horizontal",
+                horizontal=cfg.INPUT.RANDOM_FLIP == "horizontal", # horizontal by default
                 vertical=cfg.INPUT.RANDOM_FLIP == "vertical",
             )
-        )
-
+        ])
     augmentation.extend([
-        T.ResizeScale(
-            min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
-        ),
-        T.FixedSizeCrop(crop_size=(image_size, image_size)),
+        T.RandomRotation(angle=[0, 90, 180, 270], sample_style = 'choice') # Revised our angles
     ])
 
+    """
+    RandomBrightness: (0.85, 1.15)
+    RandomContrast: (0.9, 1.1)
+    RandomSaturation: (0.85, 1.15)
+    """ 
+    augmentation.extend([
+        T.RandomBrightness(intensity_min=0.85, intensity_max=1.15),
+        T.RandomContrast(intensity_min=0.9, intensity_max=1.1),
+        T.RandomSaturation(intensity_min=0.85, intensity_max=1.15)
+    ])
+
+    augmentation.extend([
+        # WITH SMALLER TILES - SAHI: NO SR
+        T.ResizeShortestEdge(
+            short_edge_length=(image_size, image_size), 
+            max_size = image_size, 
+            sample_style = 'choice', 
+            interp = Image.BILINEAR # Use DEFAULT = BILNEAR (BASELINE RESIZING METHOD)
+        ),
+    ])
     return augmentation
 
 
@@ -174,6 +215,8 @@ class COCOInstanceNewBaselineDatasetMapper:
             # [(0,0), (2,0), (0,2)] cropped by a box [(1,0),(2,2)] (XYXY format). The tight
             # bounding box of the cropped triangle should be [(1,0),(2,1)], which is not equal to
             # the intersection of original bounding box and the cropping box.
+            if not instances.has('gt_masks'):  # this is to avoid empty annotation
+                instances.gt_masks = PolygonMasks([])
             instances.gt_boxes = instances.gt_masks.get_bounding_boxes()
             # Need to filter empty instances first (due to augmentation)
             instances = utils.filter_empty_instances(instances)
