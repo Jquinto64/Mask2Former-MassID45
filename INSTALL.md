@@ -56,8 +56,9 @@ pip install pillow==9.5.0
 pip install sahi==0.11.18
 pip install pycocotools
 
-# Move the following files to miniconda/envs/maskdino/lib/python3.8/site-packages/sahi/:
-# Change line 17 in sahi_modifications/detectron2.py: sys.path.insert(0, <ABSOLUTE FILE PATH TO Mask2Former folder>) then
+# Move the following files to miniconda/envs/mask2former/lib/python3.8/site-packages/sahi/:
+# Change line 16 in sahi_modifications/detectron2.py:
+# sys.path.insert(0, <ABSOLUTE FILE PATH TO Mask2Former folder>) then
 cp sahi_modifications/detectron2.py /miniconda/envs/mask2former/lib/python3.8/site-packages/sahi/models/detectron2.py
 
 cp sahi_modifications/annotation.py /miniconda/envs/mask2former/lib/python3.8/site-packages/sahi/annotation.py
