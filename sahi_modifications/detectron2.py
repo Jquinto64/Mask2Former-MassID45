@@ -138,10 +138,15 @@ class Detectron2DetectionModel(DetectionModel):
         shift_amount = shift_amount_list[0]
         full_shape = None if full_shape_list is None else full_shape_list[0]
 
-        # parse boxes, masks, scores, category_ids from predictions
-        boxes = original_predictions["instances"].pred_boxes.tensor
-        scores = original_predictions["instances"].scores
-        category_ids = original_predictions["instances"].pred_classes
+        # parse boxes, masks, scores, category_ids from predictions # FIX for Killarney
+        # boxes = original_predictions["instances"].pred_boxes.tensor
+        # scores = original_predictions["instances"].scores
+        # category_ids = original_predictions["instances"].pred_classes
+        
+        boxes = original_predictions["instances"].pred_boxes.tensor.cpu()
+        scores = original_predictions["instances"].scores.cpu()
+        category_ids = original_predictions["instances"].pred_classes.cpu()
+        masks = original_predictions["instances"].pred_masks.cpu()
 
         # check if predictions contain mask
         try:
